@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { Grid, TextField, Button, FormControl, InputLabel, Select, MenuItem, AppBar, Toolbar, Typography } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Grid, TextField, Button, AppBar, Toolbar, Typography } from '@mui/material';
 
 const App = () => {
-  const [timeIntervals, setTimeIntervals] = useState([{ inHour: '', inMinute: '', inAmPm: 'AM', outHour: '', outMinute: '', outAmPm: 'AM' }]);
+  const [timeIntervals, setTimeIntervals] = useState([{ inHour: '', inMinute: '', outHour: '', outMinute: '' }]);
   const [totalHours, setTotalHours] = useState(0);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    calculateTotalHours();
+  }, [timeIntervals]);
 
   const handleInputChange = (index, event) => {
     const { name, value } = event.target;
@@ -14,7 +18,13 @@ const App = () => {
   };
 
   const addTimeInterval = () => {
-    setTimeIntervals([...timeIntervals, { inHour: '', inMinute: '', inAmPm: 'AM', outHour: '', outMinute: '', outAmPm: 'AM' }]);
+    setTimeIntervals([...timeIntervals, { inHour: '', inMinute: '', outHour: '', outMinute: '' }]);
+  };
+
+  const deleteTimeInterval = (index) => {
+    const newTimeIntervals = [...timeIntervals];
+    newTimeIntervals.splice(index, 1);
+    setTimeIntervals(newTimeIntervals);
   };
 
   const calculateTotalHours = () => {
@@ -25,32 +35,17 @@ const App = () => {
         hasEmptyField = true;
         return;
       }
-      const inTime = convertTo24Hour(`${interval.inHour}:${interval.inMinute} ${interval.inAmPm}`);
-      const outTime = convertTo24Hour(`${interval.outHour}:${interval.outMinute} ${interval.outAmPm}`);
+      const inTime = `${interval.inHour}:${interval.inMinute}`;
+      const outTime = `${interval.outHour}:${interval.outMinute}`;
       total += calculateHourDifference(inTime, outTime);
     });
     if (hasEmptyField) {
       setError(true);
+      setTotalHours(0); // Reset total hours if there are empty fields
     } else {
       setError(false);
       setTotalHours(total);
     }
-  };
-
-  const convertTo24Hour = (time12h) => {
-    const [time, modifier] = time12h.split(' ');
-
-    let [hours, minutes] = time.split(':');
-
-    if (hours === '12') {
-      hours = '00';
-    }
-
-    if (modifier === 'PM') {
-      hours = parseInt(hours, 10) + 12;
-    }
-
-    return `${hours}:${minutes}`;
   };
 
   const calculateHourDifference = (inTime, outTime) => {
@@ -63,12 +58,8 @@ const App = () => {
     return hours + minutes / 60;
   };
 
-  const handleAutoCalculate = () => {
-    calculateTotalHours();
-  };
-
   const handleReset = () => {
-    setTimeIntervals([{ inHour: '', inMinute: '', inAmPm: 'AM', outHour: '', outMinute: '', outAmPm: 'AM' }]);
+    setTimeIntervals([{ inHour: '', inMinute: '', outHour: '', outMinute: '' }]);
     setTotalHours(0);
     setError(false);
   };
@@ -85,8 +76,8 @@ const App = () => {
       <div style={{ padding: '20px' }}>
         <Grid container spacing={2}>
           {timeIntervals.map((interval, index) => (
-            <React.Fragment key={index}>
-              <Grid item xs={4}>
+            <Grid container item spacing={2} key={index}>
+              <Grid item xs={12} sm={3}>
                 <TextField
                   fullWidth
                   type="number"
@@ -96,7 +87,7 @@ const App = () => {
                   name="inHour"
                 />
               </Grid>
-              <Grid item xs={4}>
+              <Grid item xs={12} sm={3}>
                 <TextField
                   fullWidth
                   type="number"
@@ -106,19 +97,7 @@ const App = () => {
                   name="inMinute"
                 />
               </Grid>
-              <Grid item xs={4}>
-                <FormControl fullWidth>
-                  <Select
-                    value={interval.inAmPm}
-                    onChange={(e) => handleInputChange(index, e)}
-                    name="inAmPm"
-                  >
-                    <MenuItem value="AM">AM</MenuItem>
-                    <MenuItem value="PM">PM</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={4}>
+              <Grid item xs={12} sm={3}>
                 <TextField
                   fullWidth
                   type="number"
@@ -128,7 +107,7 @@ const App = () => {
                   name="outHour"
                 />
               </Grid>
-              <Grid item xs={4}>
+              <Grid item xs={12} sm={3}>
                 <TextField
                   fullWidth
                   type="number"
@@ -138,26 +117,14 @@ const App = () => {
                   name="outMinute"
                 />
               </Grid>
-              <Grid item xs={4}>
-                <FormControl fullWidth>
-                  <Select
-                    value={interval.outAmPm}
-                    onChange={(e) => handleInputChange(index, e)}
-                    name="outAmPm"
-                  >
-                    <MenuItem value="AM">AM</MenuItem>
-                    <MenuItem value="PM">PM</MenuItem>
-                  </Select>
-                </FormControl>
+              <Grid item xs={12}>
+                <Button variant="outlined" color="secondary" onClick={() => deleteTimeInterval(index)}>Delete</Button>
               </Grid>
-            </React.Fragment>
+            </Grid>
           ))}
         </Grid>
         <Button variant="contained" color="primary" onClick={addTimeInterval} style={{ marginTop: '20px' }}>
           Add Time Interval
-        </Button>
-        <Button variant="contained" color="success" onClick={handleAutoCalculate} style={{ marginLeft: '10px', marginTop: '20px' }}>
-          Calculate Total Hours
         </Button>
         <Button variant="contained" color="secondary" onClick={handleReset} style={{ marginLeft: '10px', marginTop: '20px' }}>
           Reset
@@ -180,4 +147,3 @@ const App = () => {
 };
 
 export default App;
-
